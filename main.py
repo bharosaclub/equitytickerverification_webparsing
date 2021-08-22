@@ -34,6 +34,7 @@ test_list = ['Nestle SA', 'Wal-Mart Stores Inc']
 #     else:
 #         print(f"{name} had {ticker.upper()} as ticker symbol")
 #         names_with_ticker.append([name, ticker.upper()])
+
 for name in ['Toronto-Dominion Bank']:
     search_query = f"https://www.google.com/search?q={name.replace(' ','+').replace('(', '').replace(')', '')}+yahoo+finance"
     # print(search_query)
@@ -45,7 +46,7 @@ for name in ['Toronto-Dominion Bank']:
         text = header.string
         print(text)
         # print('__')
-        remove_irrelevant_brackets = lambda text: re.sub('\([A-Z][a-z]*\)', '', text)
+        remove_irrelevant_brackets = lambda text: re.sub('\([A-Za-z][a-z]*\)', '', text)
         text = remove_irrelevant_brackets(text)
         print(text)
         match = re.search(r'\((\S*?)\)', text)
