@@ -1,72 +1,49 @@
-import selenium
 from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 import re
+import numpy as np
+from levensten_algorithm import *
+from word_algorithm import *
 data = pd.read_csv('data.csv')
 names = []
 for name in data['display_name'].tolist():
     names.append(name)
 names_with_ticker = []
-# print(names[:20])
-# print (names)
-# test_list = [names[0]]
+
 test_list = ['Nestle SA', 'Wal-Mart Stores Inc']
-# for name in ['Quantum Information Services']:
-#     search_query = f"https://www.google.com/search?q={name.replace(' ','+')}+yahoo+finance"
-#     raw = requests.get(search_query)
-#     soup = BeautifulSoup(raw.text, "lxml")
-#     links = soup.findAll("a")
-#     match = False
-#     for link in links:
-#         # print(link.attrs['href'])
-#         match = re.search(r'\w?\w?.?finance.yahoo.com/(\w*?)?/?(\w*)', link.attrs['href'], flags = 0)
-#         if match == None:
-#             ticker = False
-#         else:
-#             ticker = match.group(2)
-#             # print(f"{name} had {match.group(2)} as ticker symbol")
-#             break
-#     if not ticker:
-#         print(f"{name} had no match")
-#         ticker = "none"
-#         names_with_ticker.append([name, ticker])
-#     else:
-#         print(f"{name} had {ticker.upper()} as ticker symbol")
-#         names_with_ticker.append([name, ticker.upper()])
-def get_ticker(name):
-    """
-    Function to encapsulate for loop and execute every time to get ticker symbol
-    Also check whether direct match or indirect, and list all further matches as well
-    """
-    
-for name in names[:50]:
+removals = ['Amalgamated','Private', 'Limited', 'Ltd.', 'Inc.', 'Inc', 'Ltd', 'Corp']
+for name in ['DominoS Pizza Services Private Limited']:
+    for removal in removals:
+        name = name.replace(removal, '')
+        name = name.strip()
     search_query = f"https://www.google.com/search?q={name.replace(' ','+').replace('(', '').replace(')', '')}+yahoo+finance"
-    # print(search_query)
     raw = requests.get(search_query)
     soup = BeautifulSoup(raw.text, "lxml")
     headers = soup.findAll("h3")
     match = False
     for header in headers:
         text = header.string
-        # print(text)
-        # print('__')
         remove_irrelevant_brackets = lambda text: re.sub('\([A-Za-z][a-z]*\)', '', text)
         text = remove_irrelevant_brackets(text)
-        # print(text)
-        match = re.search(r'\((\S*?)\)', text)
+        match = re.search(r'(.*)\((\S*?)\)', text)
         if match == None:
             ticker = False
         else:
-            ticker = match.group(1)
-            # print('match found')
+            ticker = match.group(2)
+            response = match.group(1)
+            for removal in removals:
+                response = response.replace(removal, '')
+                response = response.strip()
             break
     if not ticker:
         print(f"{name} had no match")
-        names_with_ticker.append([name, 'undefined'])
+        names_with_ticker.append([name, response, 'undefined', 0])
     else:
         print(f"{name} had {ticker.upper()} as ticker symbol")
-        names_with_ticker.append([name, ticker.upper()])
+        similarity = 1/levenshtein_distance(name, response)
+        names_with_ticker.append([name, response, ticker.upper(), similarity])
 
+print(names_with_ticker)
 df = pd.DataFrame(names_with_ticker)
 df.to_csv('output.csv')

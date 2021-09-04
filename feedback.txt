@@ -1,0 +1,3 @@
+remove suffixes
+simple text comparison algorithm
+give precedence values
